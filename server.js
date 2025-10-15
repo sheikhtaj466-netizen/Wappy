@@ -28,7 +28,7 @@ const chatHistory = {};
 // --- Nodemailer Transport ---
 const transporter = nodemailer.createTransport({
     service: 'gmail',
-    auth: { user: 'YOUR_EMAIL@gmail.com', pass: 'YOUR_APP_PASSWORD' } // Apna email/password daalein
+    auth: { user: 'sheikhtaj466@gmail.com', pass: 'eluplxqapjdtwpsh' } // Apna email/password daalein
 });
 
 // --- API Endpoints ---
