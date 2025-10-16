@@ -4,27 +4,23 @@ const { Server } = require("socket.io");
 const nodemailer = require('nodemailer');
 const bodyParser = require('body-parser');
 const path = require('path');
-const cors = require('cors'); // CORS library
+const cors = require('cors');
 
 const app = express();
 const server = http.createServer(app);
 
-// --- YEH HAI ASLI SOLUTION: CORS ko theek karna ---
-// Server ko batana ki kisi bhi website se request accept karo
-app.use(cors({
-    origin: '*' 
-}));
-// --- SOLUTION END ---
+app.use(cors({ origin: '*' }));
 
 const io = new Server(server, { cors: { origin: "*", methods: ["GET", "POST"] } });
 const port = process.env.PORT || 3000;
 
+// Password Render ki Tijori se padhna
 const transporter = nodemailer.createTransport({
     host: 'smtp-relay.brevo.com',
     port: 587,
     auth: {
-        user: 'sheikhtaj466@gmail.com', // <<-- Brevo wala login email
-        pass: 'xsmtpsib-1b568cc3c4652ca11a9aed7cb3b6d350194dda26f76ec1764b850e776b4c975d-USNGyK3sbz1RCVkD'              // <<-- Brevo wali SMTP Key
+        user: process.env.BREVO_USER,
+        pass: process.env.BREVO_PASS
     }
 });
 
@@ -38,14 +34,16 @@ const chatHistory = {};
 app.post('/send-otp', async (req, res) => {
     console.log(`'/send-otp' endpoint par request aayi! Email: ${req.body.email}`);
     const { email } = req.body;
-    if (!email) return res.status(400).json({ message: 'Email zaroori hai.' });
+    if (!email) {
+        return res.status(400).json({ message: 'Email zaroori hai.' });
+    }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     otpStore[email] = { otp, timestamp: Date.now() };
     console.log(`OTP for ${email}: ${otp}`);
 
     const mailOptions = {
-        from: 'YOUR_BREVO_LOGIN_EMAIL@gmail.com',
+        from: process.env.BREVO_USER,
         to: email,
         subject: 'Wappy Login OTP',
         html: `Aapka Wappy OTP hai: <strong>${otp}</strong>`,
@@ -61,8 +59,7 @@ app.post('/send-otp', async (req, res) => {
     }
 });
 
-// Baaki ka poora code bilkul waisa hi rahega...
-app.post('/verify-otp', (req, res) => { const { email, otp } = req.body; if (!email || !otp) return res.status(400).json({ message: 'Email and OTP are required.' }); const stored = otpStore[email]; if (!stored || otp !== stored.otp || (Date.now() - stored.timestamp > 300000)) { return res.status(400).json({ message: 'Invalid or expired OTP.' }); } delete otpStore[email]; if (!users[email]) { users[email] = { online: false, lastMessage: '', timestamp: '' }; } res.status(200).json({ message: 'Login successful!', user: { email } }); });
+app.post('/verify-otp', (req, res) => { const { email, otp } = req.body; if (!email || !otp) { return res.status(400).json({ message: 'Email and OTP are required.' }); } const stored = otpStore[email]; if (!stored || otp !== stored.otp || (Date.now() - stored.timestamp > 300000)) { return res.status(400).json({ message: 'Invalid or expired OTP.' }); } delete otpStore[email]; if (!users[email]) { users[email] = { online: false, lastMessage: '', timestamp: '' }; } res.status(200).json({ message: 'Login successful!', user: { email } }); });
 app.get('/api/users', (req, res) => { const allUsers = Object.keys(users).map(email => ({ email, online: users[email].online || false, lastMessage: users[email].lastMessage || 'No messages yet.', timestamp: users[email].timestamp || '' })); res.json(allUsers); });
 app.get('/api/chat-history/:user1/:user2', (req, res) => { const { user1, user2 } = req.params; const roomKey = [user1, user2].sort().join('-'); res.json(chatHistory[roomKey] || []); });
 io.on('connection', (socket) => { console.log('Ek naya user connect hua: ' + socket.id); socket.on('register', (email) => { if(!users[email]) { users[email] = {}; } users[email].socketId = socket.id; users[email].online = true; socket.email = email; io.emit('user status changed', { email, online: true, lastMessage: users[email].lastMessage, timestamp: users[email].timestamp }); }); socket.on('private message', ({ to, message }) => { const recipient = users[to]; const sender = users[socket.email]; const roomKey = [to, socket.email].sort().join('-'); if (!chatHistory[roomKey]) { chatHistory[roomKey] = []; } const messageData = { from: socket.email, message: message, time: new Date() }; chatHistory[roomKey].push(messageData); const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); sender.lastMessage = message; sender.timestamp = timestamp; recipient.lastMessage = message; recipient.timestamp = timestamp; if (recipient && recipient.online) { io.to(recipient.socketId).emit('private message', messageData); } io.emit('user status changed', { email: to, online: recipient.online, lastMessage: message, timestamp }); io.emit('user status changed', { email: socket.email, online: sender.online, lastMessage: message, timestamp }); }); socket.on('disconnect', () => { if (socket.email && users[socket.email]) { users[socket.email].online = false; io.emit('user status changed', { email: socket.email, online: false, lastMessage: users[socket.email].lastMessage, timestamp: users[socket.email].timestamp }); } }); });
