@@ -3,207 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wappy</title>
+    <title>Wappy - Final Test</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .hidden { display: none !important; }
-        #app-container { height: 100vh; max-height: 100vh; background-color: #ECE5DD; }
-        .page { display: flex; flex-direction: column; height: 100%; width:100%; position:absolute; top:0; transition: transform 0.3s ease-in-out; }
-        .page.left { transform: translateX(-100%); }
-        .page.right { transform: translateX(100%); }
-        .page.center { transform: translateX(0%); }
-        #messages-container { background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
-        .message { padding: 6px 12px; border-radius: 8px; margin-bottom: 8px; max-width: 80%; line-height: 1.4; }
-        .sent { background-color: #E1FFC7; align-self: flex-end; }
-        .received { background-color: #FFFFFF; align-self: flex-start; }
-        .timestamp { font-size: 0.7rem; color: #999; margin-left: 8px; }
+        .otp-input { width: 40px; height: 48px; text-align: center; font-size: 1.25rem; border: 1px solid #D1D5DB; border-radius: 0.5rem; margin: 0 4px; }
+        .otp-input:focus { outline: none; border-color: #10B981; }
+        .page { display: none; }
+        .page.active { display: block; }
     </style>
 </head>
-<body class="bg-gray-200">
+<body class="bg-gray-50 flex items-center justify-center min-h-screen">
 
-<div id="app-container" class="w-full max-w-md mx-auto relative overflow-hidden">
+    <!-- Yeh hamara main container hai -->
+    <div id="app-container" class="w-full max-w-sm mx-auto p-4">
+
+        <!-- Login Page -->
+        <div id="email-page" class="page active">
+            <div class="text-center">
+                <span class="text-6xl">🍉</span>
+                <h1 class="text-2xl font-bold text-gray-800 mt-4">Welcome to Wappy</h1>
+            </div>
+            <div class="mt-8">
+                <input type="email" id="email" placeholder="Enter your email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                <button id="send-btn" class="w-full bg-green-500 text-white font-semibold py-3 mt-4 rounded-lg hover:bg-green-600 transition">Send</button>
+                <!-- Yahan par error dikhega -->
+                <p id="email-error" class="text-red-500 text-sm mt-2 text-center font-semibold"></p>
+            </div>
+        </div>
+
+        <!-- Baaki ke pages waise hi hain -->
+        <div id="otp-page" class="page">
+             <div class="text-center"><span class="text-5xl">🍉</span><h1 class="text-2xl font-bold text-gray-800 mt-4">Enter OTP</h1><p class="text-gray-600 mt-2">Sent to <span id="user-email-display" class="font-semibold"></span></p></div>
+             <div class="mt-8 flex justify-center" id="otp-inputs"></div>
+             <div class="mt-4"><button id="done-btn" class="w-full bg-green-500 text-white font-semibold py-3 mt-4 rounded-lg">Done</button><p id="otp-error" class="text-red-500 text-sm mt-2 text-center"></p></div>
+        </div>
+    </div>
     
-    <!-- PAGE 1: Login -->
-    <div id="login-page" class="page center bg-white flex items-center justify-center">
-        <div class="w-full max-w-sm p-8">
-            <div id="email-section">
-                <div class="text-center"><span class="text-5xl">🍉</span><h1 class="text-2xl font-bold text-gray-800 mt-4">Welcome to Wappy</h1></div>
-                <div class="mt-8"><input type="email" id="email" placeholder="Enter your email" class="w-full px-4 py-3 border rounded-lg"><button id="send-btn" class="w-full bg-teal-500 text-white font-semibold py-3 mt-4 rounded-lg">Send</button><p id="email-error" class="text-red-500 h-4 mt-2 text-center"></p></div>
-            </div>
-            <div id="otp-section" class="hidden">
-                 <div class="text-center"><span class="text-5xl">🍉</span><h1 class="text-2xl font-bold text-gray-800 mt-4">Enter OTP</h1></div>
-                <div class="mt-8"><input type="text" id="otp-input" placeholder="6-digit OTP" maxlength="6" class="w-full text-center tracking-[0.5em] text-2xl px-4 py-3 border rounded-lg"></div>
-                <div class="mt-4"><button id="done-btn" class="w-full bg-teal-500 text-white font-semibold py-3 mt-4 rounded-lg">Verify</button><p id="otp-error" class="text-red-500 h-4 mt-2 text-center"></p></div>
-            </div>
-        </div>
-    </div>
+    <!-- Dashboard aur Chat ka poora structure neeche hai (abhi ke liye hidden) -->
+    <div id="main-app" class="hidden w-full h-screen max-w-md mx-auto bg-white flex flex-col"></div>
 
-    <!-- PAGE 2: Dashboard/Contacts -->
-    <div id="dashboard-page" class="page right bg-white">
-        <header class="p-4 bg-teal-600 text-white shadow-md flex justify-between items-center z-10">
-            <h1 class="text-xl font-bold">Wappy</h1>
-            <div class="flex items-center space-x-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" /></svg>
-            </div>
-        </header>
-        <div class="flex-grow overflow-y-auto">
-            <ul id="contacts-list"></ul>
-        </div>
-        <div class="absolute bottom-6 right-6"><button class="w-14 h-14 bg-teal-500 text-white rounded-full flex items-center justify-center shadow-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg></button></div>
-    </div>
 
-    <!-- PAGE 3: Private Chat -->
-    <div id="chat-page" class="page right">
-        <header class="p-3 bg-teal-600 text-white shadow-md flex items-center z-10">
-            <button id="back-btn" class="p-2 mr-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg></button>
-            <div class="w-10 h-10 rounded-full bg-gray-300 mr-3"></div>
-            <h2 id="chat-header" class="text-lg font-semibold flex-grow"></h2>
-            <div class="flex items-center space-x-3">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" /></svg>
-            </div>
-        </header>
-        <div id="messages-container" class="flex-grow p-4 flex flex-col overflow-y-auto"></div>
-        <div class="p-2 bg-gray-100 border-t">
-            <form id="chat-form" class="flex items-center space-x-2">
-                <div class="flex-grow flex items-center bg-white rounded-full px-4 py-2">
-                     <input id="chat-input" autocomplete="off" class="flex-grow bg-transparent focus:outline-none" placeholder="Message"/>
-                </div>
-                <button class="w-12 h-12 bg-teal-500 text-white rounded-full flex items-center justify-center">
-                    <svg class="w-6 h-6 transform rotate-90" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M1.946 9.315c-.522-.174-.527-.455.01-.634l19.087-6.362c.529-.176.832.12.684.638l-5.454 19.086c-.15.529-.455.547-.679.045L12 14l6-8-8 6-8.054-2.685z"/></svg>
-                </button>
-            </form>
-        </div>
-    </div>
-
-</div>
-
-<script src="/socket.io/socket.io.js"></script>
 <script>
-    // --- NAYA ZAROORI STEP: SERVER KA FULL ADDRESS ---
-    const API_URL = 'https://wappy.onrender.com'; 
-    const socket = io(API_URL); // Socket ko bhi batayein server kahan hai
+    const emailPage = document.getElementById('email-page');
+    const otpPage = document.getElementById('otp-page');
+    const emailInput = document.getElementById('email');
+    const sendBtn = document.getElementById('send-btn');
+    const emailError = document.getElementById('email-error');
+    const userEmailDisplay = document.getElementById('user-email-display');
+    const otpInputsContainer = document.getElementById('otp-inputs');
+    const doneBtn = document.getElementById('done-btn');
 
-    let currentUser = {};
-    let chatPartnerEmail = null;
+    // SERVER KA NAYA, PERMANENT ADDRESS
+    const SERVER_URL = 'https://wappy.onrender.com';
 
-    const pages = {
-        login: document.getElementById('login-page'),
-        dashboard: document.getElementById('dashboard-page'),
-        chat: document.getElementById('chat-page'),
-    };
-    
-    function navigateTo(pageName) {
-        Object.keys(pages).forEach(key => {
-            pages[key].classList.remove('center', 'left', 'right');
-            if (key === pageName) {
-                pages[key].classList.add('center');
-            } else {
-                pages[key].classList.add('right');
-            }
-        });
-    }
-
-    const emailInput = document.getElementById('email'), otpInput = document.getElementById('otp-input');
-    const sendBtn = document.getElementById('send-btn'), doneBtn = document.getElementById('done-btn');
-    const emailSection = document.getElementById('email-section'), otpSection = document.getElementById('otp-section');
-    const contactsList = document.getElementById('contacts-list');
-    const chatHeader = document.getElementById('chat-header');
-    const chatForm = document.getElementById('chat-form');
-    const chatInput = document.getElementById('chat-input');
-    const messagesContainer = document.getElementById('messages-container');
-    
-    sendBtn.addEventListener('click', async () => {
-        const email = emailInput.value;
-        if(!email) return;
-        // API call me poora URL istemal karein
-        const response = await fetch(`${API_URL}/send-otp`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
-        if (response.ok) {
-            currentUser.email = email;
-            emailSection.classList.add('hidden');
-            otpSection.classList.remove('hidden');
+    async function sendOtp() {
+        const userEmail = emailInput.value;
+        if (!userEmail) {
+            emailError.textContent = 'Please enter an email.';
+            return;
         }
-    });
-
-    doneBtn.addEventListener('click', async () => {
-        const otp = otpInput.value;
-        if(!otp) return;
-        // API call me poora URL istemal karein
-        const response = await fetch(`${API_URL}/verify-otp`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: currentUser.email, otp }) });
-        if (response.ok) {
-            socket.emit('register', currentUser.email);
-            navigateTo('dashboard');
-            loadContacts();
-        }
-    });
-
-    async function loadContacts() {
-        // API call me poora URL istemal karein
-        const response = await fetch(`${API_URL}/api/users`);
-        const users = await response.json();
-        contactsList.innerHTML = '';
-        users.filter(u => u.email !== currentUser.email).forEach(user => {
-            const li = document.createElement('li');
-            li.className = 'p-3 border-b flex items-center cursor-pointer hover:bg-gray-100';
-            li.dataset.email = user.email;
-            li.innerHTML = `
-                <div class="relative mr-4">
-                    <div class="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center text-xl font-bold text-gray-600">${user.email.charAt(0).toUpperCase()}</div>
-                </div>
-                <div class="flex-grow">
-                    <div class="flex justify-between items-center">
-                        <span class="font-semibold">${user.email}</span>
-                        <span class="text-xs text-gray-500 timestamp-list">${user.timestamp}</span>
-                    </div>
-                    <p class="text-sm text-gray-600 last-message-list truncate">${user.lastMessage}</p>
-                </div>`;
-            li.onclick = () => openChat(user.email);
-            contactsList.appendChild(li);
-        });
-    }
-
-    async function openChat(email) {
-        chatPartnerEmail = email;
-        chatHeader.textContent = email;
-        messagesContainer.innerHTML = '';
         
-        // API call me poora URL istemal karein
-        const response = await fetch(`${API_URL}/api/chat-history/${currentUser.email}/${chatPartnerEmail}`);
-        const history = await response.json();
-        history.forEach(msg => addMessage(msg.message, msg.from === currentUser.email ? 'sent' : 'received', new Date(msg.time)));
+        emailError.textContent = '';
+        sendBtn.disabled = true;
+        sendBtn.textContent = 'Sending...';
 
-        navigateTo('chat');
+        try {
+            const response = await fetch(`${SERVER_URL}/send-otp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: userEmail }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                // Agar server ne error bheja, to usko screen par dikhao
+                throw new Error(data.message || `Server responded with ${response.status}`);
+            }
+            
+            // Success! Agle page par jaao
+            userEmailDisplay.textContent = userEmail;
+            emailPage.classList.remove('active');
+            otpPage.classList.add('active');
+
+        } catch (error) {
+            // --- YEH HAI HAMARA JAASOOS ---
+            // Koi bhi galti hogi, to yahan screen par dikh jayegi
+            console.error('Ek Galti Pakdi Gayi:', error);
+            emailError.textContent = `Error: ${error.message}. Browser ya server me problem hai.`;
+        } finally {
+            sendBtn.disabled = false;
+            sendBtn.textContent = 'Send';
+        }
     }
 
-    document.getElementById('back-btn').addEventListener('click', () => navigateTo('dashboard'));
-
-    chatForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        if (chatInput.value && chatPartnerEmail) {
-            const message = chatInput.value;
-            socket.emit('private message', { to: chatPartnerEmail, message });
-            addMessage(message, 'sent', new Date());
-            chatInput.value = '';
-        }
-    });
-
-    function addMessage(text, type, time) {
-        const item = document.createElement('div');
-        const timeString = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        item.className = `message ${type}`;
-        item.innerHTML = `<span>${text}</span><span class="timestamp">${timeString}</span>`;
-        messagesContainer.appendChild(item);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
-
-    socket.on('private message', ({ from, message, time }) => {
-        if (from === chatPartnerEmail) {
-            addMessage(message, 'received', new Date(time));
-        }
-    });
-    socket.on('user status changed', (updatedUser) => { /* Ismein koi badlaav nahi */ });
+    sendBtn.addEventListener('click', sendOtp);
 
 </script>
 </body>
