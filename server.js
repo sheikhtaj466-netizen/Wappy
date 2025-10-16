@@ -4,14 +4,21 @@ const { Server } = require("socket.io");
 const nodemailer = require('nodemailer');
 const bodyParser = require('body-parser');
 const path = require('path');
-const cors = require('cors');
+const cors = require('cors'); // CORS library
 
 const app = express();
 const server = http.createServer(app);
+
+// --- YEH HAI ASLI SOLUTION: CORS ko theek karna ---
+// Server ko batana ki kisi bhi website se request accept karo
+app.use(cors({
+    origin: '*' 
+}));
+// --- SOLUTION END ---
+
 const io = new Server(server, { cors: { origin: "*", methods: ["GET", "POST"] } });
 const port = process.env.PORT || 3000;
 
-// --- Yahan apni Brevo ki details daalein jo 100% kaam karegi ---
 const transporter = nodemailer.createTransport({
     host: 'smtp-relay.brevo.com',
     port: 587,
@@ -21,7 +28,6 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-app.use(cors());
 app.use(bodyParser.json());
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
@@ -32,28 +38,26 @@ const chatHistory = {};
 app.post('/send-otp', async (req, res) => {
     console.log(`'/send-otp' endpoint par request aayi! Email: ${req.body.email}`);
     const { email } = req.body;
-    if (!email) return res.status(400).json({ message: 'Email is required.' });
+    if (!email) return res.status(400).json({ message: 'Email zaroori hai.' });
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     otpStore[email] = { otp, timestamp: Date.now() };
     console.log(`OTP for ${email}: ${otp}`);
 
     const mailOptions = {
-        from: 'YOUR_BREVO_LOGIN_EMAIL@gmail.com', // Brevo wala login email
+        from: 'YOUR_BREVO_LOGIN_EMAIL@gmail.com',
         to: email,
-        subject: 'Your Wappy Login OTP',
+        subject: 'Wappy Login OTP',
         html: `Aapka Wappy OTP hai: <strong>${otp}</strong>`,
     };
 
     try {
         await transporter.sendMail(mailOptions);
         console.log("Email Brevo se successfully bheja gaya " + email);
-        res.status(200).json({ message: 'OTP sent.' });
+        res.status(200).json({ message: 'OTP bhej diya gaya hai.' });
     } catch (error) {
-        console.error("--- EMAIL BHEJNE ME ERROR AAYA ---");
-        console.error(JSON.stringify(error, null, 2));
-        console.error("--- ERROR END ---");
-        res.status(500).json({ message: 'Failed to send OTP.' });
+        console.error("--- EMAIL BHEJNE ME ERROR ---", error);
+        res.status(500).json({ message: 'Server email nahi bhej paaya.' });
     }
 });
 
